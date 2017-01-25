@@ -1,3 +1,3 @@
 # Smart_Contracts_Solidity
 
-Binome: Laura SAADI & Mouna SAADI
+Binome: Laura SAADI & Mouna WAHBY
