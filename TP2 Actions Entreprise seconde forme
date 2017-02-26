@@ -1,0 +1,111 @@
+pragma solidity ^0.4.0;
+
+contract Ceo_Salary_Vote {
+
+    // Variables
+    address public administrator; 
+    uint maxNumberPropositions; //The maximum number of propositions 
+    mapping(address => uint256) ShareHolder_Vote;
+    mapping(address => bool) hasVoted;
+    mapping(address => uint) votes;
+    mapping(uint => uint256) nbVote;
+    uint no1;
+    uint no2;
+    uint yes1;
+    uint yes2;
+    uint proposition1;
+    uint proposition2;
+    
+    function TP1_Vote(uint _maxNumberPropositions) {
+        // We can have the adress in hardcoded and after give the right to call the function at the admin
+        address sender = 0x123; 
+        administrator = sender;
+        
+        // We fixe the maximum number of propositions during  to 2 (increase or decrease ceo's salary)
+        maxNumberPropositions = 2;
+        
+        
+        maxNumberPropositions = _maxNumberPropositions; 
+    }
+
+    // Give to the voter the right to vote. But he only be called by the administrator.
+   function giveRightToVote(address shareHolder) {
+        if (msg.sender != administrator || hasVoted[shareHolder])//If the voter voted or the administrator is not the person who called the function
+        {
+            throw; //nothing happened
+        }
+        ShareHolder_Vote[shareHolder] = 1; //Else, the voter can vote. 
+    }
+
+    // Give a single vote to proposition
+    function vote(uint proposition, bool choice) {
+        address sender = 0x123; 
+        if (hasVoted[sender] || proposition >= maxNumberPropositions) // If the voter voted or the number of propositions = maximum number of propositions
+        {
+            throw; //Nothing happened
+        }
+        if(proposition==1)
+        {
+            if(choice == true)
+            {
+                yes1++;
+                proposition1 = proposition;
+            }
+            else
+            {
+                no1++;
+            }
+        }
+        if(proposition==2)
+        {
+            if(choice == true)
+            {
+                yes2++;
+                proposition2 = proposition;
+            }
+            else
+            {
+                no2++;
+            }
+        }
+}
+
+    function winningProposition() returns (uint winningProposition) {
+        uint nbProposition = 0; 
+        while (nbProposition < maxNumberPropositions) {
+            if (yes1 > no1) {
+                winningProposition = proposition1;
+            }
+            if (yes2 > no2) {
+                winningProposition = proposition2;
+            }
+            ++nbProposition; 
+        }
+    }
+}
+
+contract Share {
+    
+    address public administrator;
+    mapping (address => uint) balances;
+    mapping(address => bool) payed;
+    
+    //Create a constructor
+    function Share() {
+        administrator = msg.sender; //address of the account which made the transaction
+    }
+    
+    
+    function split(address shareholder) {
+        //If the requester is different from the legitimate requester called here "administrator" or the shareholder has already received the dividend, no transaction.
+        if (msg.sender != administrator || payed[shareholder])
+        {
+            throw;  //Nothing happened
+        }
+        else 
+        {
+            balances[msg.sender] = balances[msg.sender] - msg.value; //The dividend detained by the enterprise (so the administrator) are split between the shareholder. The administrator loose the dividend.
+            balances[shareholder] = balances[shareholder] + msg.value; //The shareholder gains the dividend distributed by the enterprise. 
+        }
+    }
+}
