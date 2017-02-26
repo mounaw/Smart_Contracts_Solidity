@@ -1,0 +1,127 @@
+pragma solidity ^0.4.0;
+
+contract Stock {
+    
+    address enterprise;
+    mapping (address => uint) balances;
+    
+    //Create a constructor
+    function Stock() {
+        enterprise = msg.sender; //address of the account which made the transaction
+    }
+    
+    //This event will generate a public event on the blockchain in order to notify everyone that the transfer buy/sell has been done
+    event Transfer_Stock(address indexed from,address indexed to, uint256 value);
+
+    //If we want to add a percentage of the stock in the enterprise portfolio we will buy a new part of the stock. 
+    function buy(address msgSender, address msgReceiver) payable returns (bool result){
+        //If the requester is different from the legitimate requester called here "enterprise", no transaction.
+        if (msg.sender != enterprise)
+        {
+            throw;
+        }
+        else //If the requester is "enterprise"
+        {
+            balances[msg.sender] = balances[msg.sender] + msg.value; //The stock detained by the enterprise contains now the actual stock values plus the new percentage of the stocks bought. 
+            balances[msgReceiver] = balances[msgReceiver] - msg.value;
+            return true;
+        }
+        //notifies the blockchain about the transfer
+        Transfer_Stock(msgSender,msgReceiver,msg.value);
+        
+    }
+    //If the enterprise wants to sell all the proportion of the stock
+    function sell(address msgSender, address msgReceiver) payable returns (bool result){
+        //If the requester is different from the legitimate requester called here "enterprise", no transaction.
+        if (msg.sender != enterprise)
+        {
+            throw;
+        }
+        else //If the requester is "enterprise"
+        {
+            balances[msg.sender] = balances[msg.sender] - msg.value; //The stock detained by the enterprise contains now the actual stock values plus the new percentage of the stocks bought. 
+            balances[msgReceiver] = balances[msgReceiver] + msg.value;
+            return true;
+        }
+        
+        //notifies the blockchain about the transfer
+        Transfer_Stock(msgSender,msgReceiver,msg.value);
+        
+    }
+}
+
+contract shareManagement {
+    address msgReceiver;
+     address enterprise; //the owner of the portfolio and stocks.
+    address stock; //Reference to the previous stock contract.   
+    
+    //Create a constructor
+    function shareManagement() {
+        enterprise = msg.sender;
+        stock = new Stock();
+    }
+    
+    
+
+    //We will add a new stock address because we want the portfolio to be composed of various stocks.
+    function stockSet(address newStock) constant returns (bool result) {
+        //If the requester is different from the legitimate requester called here "enterprise", no transaction.
+        if (msg.sender != enterprise)
+        {
+            return false;
+        }
+        else //If the requester is "enterprise"
+        {
+           stock = new Stock();
+            return true; 
+        }
+    }
+    
+    //To buy a percentage into a new stock
+    function buy() returns (bool result) {
+        //If we try to buy zero percent of a stock, there will not be a transaction.
+        if(msg.value == 0){
+            return false;
+        }
+        //If the enterprise try to send money to buy the stock which is already integrally bought, the money will be return to the enterprise.
+        if (stock == 0x0){
+            msg.sender.send(msg.value);
+            return false;
+        }
+        else
+        {
+            //We call on the stock contract.
+            bool success = Stock(stock).buy(msg.sender,msgReceiver);
+            
+            //If the transaction to buy a stock's part failed, return the money to the enterprise.
+            if(!success)
+            {
+                msg.sender.send(msg.value);// le send(msg.value) retourne un boolean on a besoin d'une vrai valeur uint
+            }
+        }
+        return success;
+    }
+    
+    function sell() returns (bool result) {
+        //If we try to buy zero percent of a stock, there will not be a transaction.
+        if(msg.value == 0){
+            return false;
+        }
+        //If the enterprise try to send money to buy the stock which is already integrally bought, the money will be return to the enterprise.
+        if (stock == 0x0){
+            msg.sender.send(msg.value);
+            return false;
+        }
+        else
+        {
+            //We call on the stock contract.
+            bool success = Stock(stock).sell(msg.sender,msgReceiver);
+            //If the transaction to buy a stock's part failed, return the money to the enterprise.
+            if(!success)
+            {
+                msg.sender.send(msg.value);
+            }
+        }
+        return success;
+    }
+}
