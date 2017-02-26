@@ -1,0 +1,93 @@
+pragma solidity ^0.4.0;
+
+contract TP1_Vote {
+// The vote takes place during a General Assembly, where every voter can either vote with 'YES' or 'NO' for each proposition
+
+    // State Variables of the current contract
+    address public administrator; 
+    uint maxNumberPropositions; 
+    mapping(address => uint256) politicalTrack;
+    mapping(address => bool) hasVoted;
+    mapping(address => uint) votes;
+    mapping(uint => uint256) nbVote;
+    uint yes1;
+    uint yes2;
+    uint no1;
+    uint no2;
+    uint proposition1;
+    uint proposition2;
+    
+    //@notice T1_Vote is the contract's constructor, it fixes the sender's address as well as the maximum
+    //number of possible propositions
+    //@para it is a sigle parameter constructor, the _maxNumberPropositions parameter 
+    //enables the sender to fix the number of propositions
+    function TP1_Vote(uint _maxNumberPropositions) {
+        
+        address sender = 0x123; 
+        administrator = sender;
+        
+       
+        maxNumberPropositions = 2;
+        
+        // On différencie entre la variable déclarée précédemment (maxNumberPropositions) et l'argument de la fonction (_maxNumberPropositions) 
+        maxNumberPropositions = _maxNumberPropositions; 
+    }
+
+    //@notice: giveRightToVote function enables the sender, which is the administrator in our case, to give the right
+    //to others to participate and vote, ofcourse after making sure that the user has not voted yet
+    //@para: the input parameter represents the voter address, after validating the sender's address and verfying his/her current 
+    //voting status(voted or not yet), the user with input address is enabled to vote
+   function giveRightToVote(address voter) {
+        if (msg.sender != administrator || hasVoted[voter])
+        {
+            throw; 
+        }
+        politicalTrack[voter] = 1; 
+    }
+
+    // Give a single vote to proposition
+    function vote(uint proposition, bool choice) {
+        address sender = 0x123; 
+        if (hasVoted[sender] || proposition >= maxNumberPropositions) // If the voter voted or the number of propositions = maximum number of propositions
+        {
+            throw; 
+        }
+        if(proposition==1)
+        {
+            if(choice == true)
+            {
+                yes1++;
+                proposition1 = proposition;
+            }
+            else
+            {
+                no1++;
+            }
+        }
+        if(proposition==2)
+        {
+            if(choice == true)
+            {
+                yes2++;
+                proposition2 = proposition;
+            }
+            else
+            {
+                no2++;
+            }
+        }
+}
+
+    function winningProposition() returns (uint winningProposition) {
+        uint nbProposition = 0; // On initialise le nombre de proposition à zéro
+        while (nbProposition < maxNumberPropositions) {
+            if (yes1 > no1) {
+                winningProposition = proposition1;
+            }
+            if (yes2 > no2) {
+                winningProposition = proposition2;
+            }
+            ++nbProposition; //On incrémente de un le compteur du nombre de proposition afin de parcourir 
+        }
+    }
+}
